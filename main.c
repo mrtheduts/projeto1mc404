@@ -14,20 +14,33 @@
 int main (int argc, char **files){
 
     FILE *in, *out;
-    char templine[65];
+    int numlin = 0;
+    char *templine;
+    argnode *init = NULL;
 
-    in = fopen(files[0], "r");
+    in = fopen(files[1], "r");
+
     if(in == NULL){
 
-    printf("Oi/n");
-        printf("Não foi possível abrir o arquivo %s\n", files[0]);
-//        perror("Error: ");
+        perror("Error: ");
         return 1;
     }
 
+    templine = malloc(65*sizeof(char));
+
     while(fgets(templine, 65, in) != NULL){
 
+        templine = idArgs(templine, numlin);
 
+        if(init == NULL){
+
+        }
+
+        else
+            init = newNode(numlin);
+        
+
+        numlin++;
     }
 
     return 0;

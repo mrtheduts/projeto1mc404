@@ -4,3 +4,7 @@
  *   RA: 166779
  */
 
+char* idArgs(char *arg, int numlin){
+
+   return NULL; 
+}
