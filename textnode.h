@@ -10,7 +10,7 @@
 #include "textnode.c"
 
 /*Cria um novo no ja identificado pelo numero da linha*/
-node* newNode (int nl);
+argnode* newNode (int nl);
 
 /*Desaloca toda a lista*/
 void destroyLine(argnode *node);

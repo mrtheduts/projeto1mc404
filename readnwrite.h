@@ -9,4 +9,9 @@
 
 #include "readnwrite.c"
 
+char* idArgs(char *arg, int *numlin);
+
+int getLine(char *templine, FILE *in);
+
 #endif /*READNWRITE_H_INCLUDED*/
+

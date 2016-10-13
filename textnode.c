@@ -8,15 +8,16 @@ typedef struct ArgNode{
 
     int numlin;
     char arg[2][5];
-    struct ArgNode *next;    
-    
+    char label[64];
+    struct ArgNode *next;
+
 } argnode;
 
 argnode* newNode(int nl){
 
     argnode *nnode;
          
-    nnode = malloc(sizeof(argnode));
+    nnode = calloc(1, sizeof(argnode));
     nnode->numlin = nl;
     nnode->next = NULL;
 

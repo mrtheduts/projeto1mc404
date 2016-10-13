@@ -14,34 +14,47 @@
 int main (int argc, char **files){
 
     FILE *in, *out;
-    int numlin = 0;
-    char *templine;
-    argnode *init = NULL;
+    int numlin = 0, type;
+    char *templine, error = 0, right = 0;
+
+    argnode *init = NULL, *tmp = NULL;
 
     in = fopen(files[1], "r");
 
     if(in == NULL){
 
-        perror("Error: ");
-        return 1;
+        perror("Error");
+        return 0;
     }
 
-    templine = malloc(65*sizeof(char));
+    templine = calloc(85, sizeof(char));
 
-    while(fgets(templine, 65, in) != NULL){
+    do{
 
-        templine = idArgs(templine, numlin);
+        type = getLine(templine, in);
+        //printf("%d\n", type);
 
-        if(init == NULL){
+        if(type == -1)
+            continue;
+        else if(!type)
+            break;
 
-        }
-
-        else
+      //  type = idArgs(templine, &numlin);
+/*
+        if(init == NULL)
             init = newNode(numlin);
-        
 
-        numlin++;
-    }
+        else {
+
+            tmp = init;
+
+            while (tmp->next != NULL)
+                tmp = tmp->next;
+
+            tmp->next = newNode(numlin);
+        }
+*/
+    }while(type);
 
     return 0;
 }
