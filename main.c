@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "readnwrite.h"
 #include "textnode.h"
@@ -14,8 +15,9 @@
 int main (int argc, char **files){
 
     FILE *in, *out;
-    int numlin = 0, type;
-    char *templine, error = 0, right = 0;
+    int numlin = 0, type, numlinin = 0, error = 0, right = 0, outfile = 0;
+    char *templine;
+    line *strct;
 
     argnode *init = NULL, *tmp = NULL;
 
@@ -27,34 +29,36 @@ int main (int argc, char **files){
         return 0;
     }
 
+    if(argc == 3)
+        outfile = 1;
+
     templine = calloc(85, sizeof(char));
 
-    do{
+    while(1){
 
         type = getLine(templine, in);
         //printf("%d\n", type);
 
         if(type == -1)
             continue;
+
         else if(!type)
             break;
 
-      //  type = idArgs(templine, &numlin);
-/*
-        if(init == NULL)
-            init = newNode(numlin);
+        numlinin++;
 
-        else {
-
-            tmp = init;
-
-            while (tmp->next != NULL)
-                tmp = tmp->next;
-
-            tmp->next = newNode(numlin);
+        if(strct = idArgs(templine, &numlin, &right, numlinin)){
+        
         }
-*/
-    }while(type);
+
+        else{
+
+            error = 1;
+            free(templine);
+            break;
+        }
+
+    }
 
     return 0;
 }

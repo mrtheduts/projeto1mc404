@@ -9,7 +9,7 @@
 
 #include "readnwrite.c"
 
-char* idArgs(char *arg, int *numlin);
+line *idArgs(char *arg, int *numlin, char *right, int numlinlin);
 
 int getLine(char *templine, FILE *in);
 
