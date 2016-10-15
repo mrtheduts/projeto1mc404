@@ -9,9 +9,19 @@
 
 #include "readnwrite.c"
 
+int issym(char *arg, line *strct);
+
 line *idArgs(char *arg, int *numlin, char *right, int numlinlin);
 
 int getLine(char *templine, FILE *in);
+
+int numPlaces (int n);
+
+int isHexNum(char *arg, line *strct);
+
+int isDeciNum(char *arg, line *strct);
+
+int idDir(char *arg, int cntdb, int *numlin, char *right, line *strct);
 
 #endif /*READNWRITE_H_INCLUDED*/
 

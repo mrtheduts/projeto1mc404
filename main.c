@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "readnwrite.h"
 #include "textnode.h"
@@ -48,7 +49,8 @@ int main (int argc, char **files){
         numlinin++;
 
         if(strct = idArgs(templine, &numlin, &right, numlinin)){
-        
+            printf("EH TETRA\n");
+            system("sleep 1s");
         }
 
         else{
