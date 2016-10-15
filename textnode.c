@@ -6,10 +6,28 @@
 
 typedef struct ArgNode{
 
-    int numlin;
-    char arg[2][5];
-    char label[64];
-    struct ArgNode *next;
+    union tag{
+
+        int numlin;
+        char label[64];
+    };
+
+    union data{
+
+        char arg[2][5];
+        unsigned long int num;
+    };
+
+    union pointer{
+
+        struct ArgNode *next;
+
+        typedef struct Pointers{
+
+            struct ArgNode *line;
+            struct ArgNode *next;
+        }pointers;
+    };
 
 } argnode;
 

@@ -12,11 +12,12 @@
 
 #include "readnwrite.h"
 #include "textnode.h"
+#include "action.h"
 
 int main (int argc, char **files){
 
     FILE *in, *out;
-    int numlin = 0, type, numlinin = 0, error = 0, right = 0, outfile = 0;
+    int numlin = 0, type, numlinin = 0, error = 0, right = 0, outfile = 0, cnt;
     char *templine;
     line *strct;
 
@@ -33,12 +34,13 @@ int main (int argc, char **files){
     if(argc == 3)
         outfile = 1;
 
-    templine = calloc(85, sizeof(char));
+    templine = calloc(200, sizeof(char));
 
     while(1){
 
         type = getLine(templine, in);
         //printf("%d\n", type);
+        numlinin++;
 
         if(type == -1)
             continue;
@@ -46,10 +48,10 @@ int main (int argc, char **files){
         else if(!type)
             break;
 
-        numlinin++;
 
-        if(strct = idArgs(templine, &numlin, &right, numlinin)){
-            printf("EH TETRA\n");
+        if(strct = idArgs(templine, numlinin)){
+
+            printLine(strct);
             system("sleep 1s");
         }
 
@@ -59,6 +61,9 @@ int main (int argc, char **files){
             free(templine);
             break;
         }
+
+        for(cnt = 0; cnt < 200; cnt++)
+            templine[cnt] = 0;
 
     }
 

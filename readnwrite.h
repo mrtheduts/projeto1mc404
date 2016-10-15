@@ -9,9 +9,9 @@
 
 #include "readnwrite.c"
 
-int issym(char *arg, line *strct);
+int issym(char *arg, line *strct, int islbl);
 
-line *idArgs(char *arg, int *numlin, char *right, int numlinlin);
+line *idArgs(char *arg, int numlinlin);
 
 int getLine(char *templine, FILE *in);
 

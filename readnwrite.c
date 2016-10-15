@@ -4,14 +4,14 @@
  *   RA: 166779
  */
 
-#define SIZEHEXA 14
+#define SIZEHEXA 15
 
 typedef struct Line{
 
     int dir;
     int label;
     int symbol;
-    int instr;
+    int inst;
     unsigned long int num;
     int negative;
     int hex;
@@ -28,7 +28,7 @@ void printLine(line *strct){
     printf("DIR %d\n", strct->dir);
     printf("LABEL %d\n", strct->label);
     printf("SYMBOL %d\n", strct->symbol);
-    printf("INSTRUCTION %d\n", strct->instr);
+    printf("INSTRUCTION %d\n", strct->inst);
     printf("NUMBER %ld\n", strct->num);
     printf("NEGATIVE %d\n", strct->negative);
     printf("IS HEX %d\n", strct->hex);
@@ -39,27 +39,30 @@ void printLine(line *strct){
     printf("====================\n");
 }
 
-int issym(char *arg, line *strct){
+int issym(char *arg, line *strct, int islbl){
 
     int cntstr = 0;
     char tmp;
 
-    printf("|||%s|||\n", arg);
-
     if(isdigit(arg[0]))
         return 0;
-
 
     while(isalnum(arg[cntstr]) || arg[cntstr] == '_') {
         cntstr++;
     }
 
-    if(!arg[cntstr] || isspace(arg[cntstr])) {
+    if((!arg[cntstr] || isspace(arg[cntstr])) && islbl == 0){
 
         memcpy(strct->sym, arg, cntstr);
         strct->symbol = 1;
-        //printf("%s\n", strct->sym);
-        //system("sleep 5s");
+        return 1;
+    }
+
+    else if(islbl && arg[cntstr] == ':' && (!arg[cntstr + 1] || isspace(arg[cntstr + 1]))){
+
+        memcpy(strct->lbl, arg, cntstr + 1);
+
+        strct->label = 1;
         return 1;
     }
 
@@ -135,7 +138,7 @@ int idDir(char *arg, int cntdb, int *numlin, char *right, line *strct){
 
     if(cntdb == 1){
 
-        if(issym(arg + 5, strct)){
+        if(issym(arg + 5, strct, 0)){
 
             if(isHexNum(arg + strlen(strct->sym) + 6, strct) || isDeciNum(arg + strlen(strct->sym) + 6, strct)){
 
@@ -209,7 +212,7 @@ int idDir(char *arg, int cntdb, int *numlin, char *right, line *strct){
 
                 if(isDeciNum(arg + 8 +numPlaces(strct->num), strct) ||
                         isHexNum(arg + 8 + numPlaces(strct->num), strct) ||
-                        issym(arg + 8 + numPlaces(strct->num), strct)){
+                        issym(arg + 8 + numPlaces(strct->num), strct, 0)){
 
 
                     if(!strct->symbol) {
@@ -246,7 +249,7 @@ int idDir(char *arg, int cntdb, int *numlin, char *right, line *strct){
 
     else if(cntdb == 5){
 
-        if(isHexNum(arg + 6, strct) || isDeciNum(arg + 6, strct) || issym(arg + 6, strct)){
+        if(isHexNum(arg + 6, strct) || isDeciNum(arg + 6, strct) || issym(arg + 6, strct, 0)){
 
             strct->dir = 5;
 
@@ -267,9 +270,11 @@ int idDir(char *arg, int cntdb, int *numlin, char *right, line *strct){
     }
 }
 
-line *idArgs(char *arg, int *numlin, char *right, int numlinin) {
+line *idArgs(char *arg, int numlinin) {
 
     char ddb[][8] = {"blank", ".set ", ".org ", ".align ", ".wfill ", ".word "};
+    char idb[][8] = {"blank", "LD ", "LD- ", "LD|", "LDmq ", "LDmq_mx ", "ST ", "JMP ", "JUMP+ ",
+    "ADD ", "ADD| ", "SUB ", "SUB| ", "MUL ", "DIV ", "LSH ", "RSH ", "STaddr "};
     int cntdb = 0;
     line *strct;
     int controle = 0;
@@ -278,7 +283,7 @@ line *idArgs(char *arg, int *numlin, char *right, int numlinin) {
 
     while(arg[0]){
 
-        printf("|%s|",arg);
+        printf("|%s|\n",arg);
 
         controle++;
 
@@ -306,11 +311,15 @@ line *idArgs(char *arg, int *numlin, char *right, int numlinin) {
                 return NULL;
             }
 
+            else if(strct->inst){
+
+                printf("Error on line %d\nDiretiva com instrucao.\n", numlinin);
+                free(strct);
+                return NULL;
+            }
+
             else
                 arg += idDir(arg, cntdb, numlin, right, strct);
-
-
-            printLine(strct);
 
             if((strct->dir == 1 || strct->dir == 2 || strct->dir == 3 || strct->dir == 4) &&
                     (strct->num > 1023 || strct->negative)){
@@ -358,7 +367,123 @@ line *idArgs(char *arg, int *numlin, char *right, int numlinin) {
             else if(strct->dir == 5 && strct->negative){
 
                 printf("Error on line %d\nNumero não compativel com diretiva.\n", numlinin);
+                free(strct);
+                return NULL;
             }
+        }
+
+        else{
+
+            if (!isdigit(arg[0])) {
+
+                if(!strct->label) {
+
+                    if (issym(arg, strct, 1)){
+
+                        printLine(strct);
+                        if (strct->dir || strct->inst){
+
+                            printf("Error on line %d\nDefinicao de rotulo depois de diretiva/instrucao\n", numlinin);
+                            free(strct);
+                            return NULL;
+                        }
+
+                        arg += strlen(strct->lbl) + 1;
+                        continue;
+                    }
+                }
+
+                if(!strct->inst){
+
+                    for (cntdb = 1; cntdb <= 17; cntdb++)
+                        if (!strncmp(arg, idb[cntdb], strlen(idb[cntdb])))
+                            break;
+
+                    if(cntdb == 18){
+
+                        printf("Error on line %d\nInstrucao invalida\n", numlinin);
+                        free(strct);
+                        return NULL;
+                    }
+
+                    else if(strct->dir){
+
+                        printf("Error on line %d\nDiretiva com instrucao.\n", numlinin);
+                        free(strct);
+                        return NULL;
+                    }
+
+                    else{
+
+                        if(cntdb == 1)
+                            strct->inst = 1;
+
+                        else if(cntdb == 2)
+                            strct->inst = 2;
+
+                        else if(cntdb == 3)
+                            strct->inst = 3;
+
+                        else if(cntdb == 4)
+                            strct->inst = 10;
+
+                        else if(cntdb == 5)
+                            strct->inst = 9;
+
+                        else if(cntdb == 6)
+                            strct->inst = 33;
+
+                        else if(cntdb == 7)
+                            strct->inst = 13;
+
+                        else if(cntdb == 8)
+                            strct->inst = 15;
+
+                        else if(cntdb == 9)
+                            strct->inst = 5;
+
+                        else if(cntdb == 10)
+                            strct->inst = 7;
+
+                        else if(cntdb == 11)
+                            strct->inst = 6;
+
+                        else if(cntdb == 12)
+                            strct->inst = 8;
+
+                        else if(cntdb == 13)
+                            strct->inst = 11;
+
+                        else if(cntdb == 14)
+                            strct->inst = 12;
+
+                        else if(cntdb == 15)
+                            strct->inst = 20;
+
+                        else if(cntdb == 16)
+                            strct->inst = 21;
+
+                        else if(cntdb == 17)
+                            strct->inst = 18;
+
+                        arg += strlen(idb[cntdb]);
+                        continue;
+                    }
+
+                }
+
+                else{
+
+                    printf("Error on line %d\nNumero maximo de palavras excedido.\n", numlinin);
+                    free(strct);
+                    return NULL;
+
+                }
+            }
+
+            printf("Error on line %d\nInstrucao/rotulo invalido", numlinin);
+            free(strct);
+            return NULL;
         }
     }
 
