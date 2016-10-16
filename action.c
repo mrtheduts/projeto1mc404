@@ -147,16 +147,20 @@ char *readyHalfWord(line *lin){
     sprintf(arg, "%0.3X", lin->num);
     arg -= 2;
 
+    //printf("RHW %s\n", arg);
+
     return arg;
 
 }
 
 void execLine(line *lin, int *numlin, int *right, argnode *initmap,
-              argnode *initsym, argnode *initlbl, int numlinin, int *error){
+              argnode *initsym, argnode *initlbl, int numlinin, int *error, FILE *out){
 
     argnode *node = NULL;
     int initwfill, endwfill;
     char *tmp;
+
+    //printNodes(initmap, initlbl, initsym);
 
     if(lin->inst){
 
@@ -164,6 +168,8 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
             insertElem(initmap, lin, *numlin, 1, NULL);
 
         node = searchElem(initmap, *numlin, NULL, 1);
+
+        //printf("NODE %d", node->numlin);
 
         if(!lin->symbol)
             strcpy(node->arg[*right], readyHalfWord(lin));
@@ -175,7 +181,7 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
             strcpy(node->label[*right], lin->sym);
         }
 
-
+        //printf("%s %s\n", node->arg[0], node->arg[1]);
 
     }
 
@@ -185,7 +191,11 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
 
         if(searchElem(initlbl, *numlin, lin->lbl, 2)){
 
-            printf("ERROR on line %d\nRedefinicao de rotulo.\n", numlinin);
+            if(out == NULL)
+                printf("ERROR on line %d\nRedefinicao de rotulo.\n", numlinin);
+            else
+                fprintf(out, "ERROR on line %d\nRedefinicao de rotulo.\n", numlinin);
+
             free(lin);
             *error = 1;
             return;
@@ -212,7 +222,11 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
 
             if(searchElem(initsym, *numlin, lin->sym, 2)){
 
-                printf("ERROR on line %d\nRedefinicao de simbolo.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nRedefinicao de simbolo.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nRedefinicao de simbolo.\n", numlinin);
+
                 free(lin);
                 *error = 1;
                 return;
@@ -239,7 +253,11 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
 
             if(*numlin == 1024){
 
-                printf("ERROR on line %d\n.align tem argumento que ultrapassa mapa de memoria.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\n.align tem argumento que ultrapassa mapa de memoria.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\n.align tem argumento que ultrapassa mapa de memoria.\n", numlinin);
+
                 free(lin);
                 *error = 1;
                 return;
@@ -255,7 +273,11 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
 
             if(*right){
 
-                printf("ERROR on line %d\nWfill comecando do lado direito.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nWfill comecando do lado direito.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nWfill comecando do lado direito.\n", numlinin);
+
                 free(lin);
                 *error = 1;
                 return;
@@ -314,7 +336,11 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
 
             if(*right){
 
-                printf("ERROR on line %d\nWord do lado direito.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nWord do lado direito.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nWord do lado direito.\n", numlinin);
+
                 free(lin);
                 *error = 1;
                 return;

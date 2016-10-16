@@ -10,6 +10,6 @@
 #include "action.c"
 
 void execLine(line *lin, int *numlin, int *right, argnode *initmap,
-              argnode *initsym, argnode *initlbl, int numlinin, int *error);
+              argnode *initsym, argnode *initlbl, int numlinin, int *error, FILE *out);
 
 #endif //PROJETO1MC404_ACTION_H

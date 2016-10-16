@@ -16,10 +16,10 @@
 
 int main (int argc, char **files){
 
-    FILE *in, *out;
-    int numlin = 0, type, numlinin = 0, error = 0, right = 0, outfile = 0, cnt;
+    FILE *in, *out = NULL;
+    int numlin = 0, type, numlinin = 0, error = 0, right = 0, cnt;
     char *templine;
-    line *strct;
+    line *strct = NULL;
 
     argnode *initmap = calloc(1, sizeof(argnode));
     argnode *initsym = calloc(1, sizeof(argnode));
@@ -34,7 +34,7 @@ int main (int argc, char **files){
     }
 
     if(argc == 3)
-        outfile = 1;
+        out = fopen(files[2], "w");
 
     templine = calloc(200, sizeof(char));
 
@@ -49,11 +49,12 @@ int main (int argc, char **files){
         else if(!type)
             break;
 
+        strct = idArgs(templine, &numlin, numlinin, out);
 
-        if(strct = idArgs(templine, &numlin, numlinin)){
+        if(strct != NULL){
 
             //printLine(strct);
-            execLine(strct, &numlin, &right, initmap, initsym, initlbl, numlinin, &error);
+            execLine(strct, &numlin, &right, initmap, initsym, initlbl, numlinin, &error, out);
             //printNodes(initmap, initlbl, initsym);
             //system("sleep 0.5s");
         }
@@ -71,11 +72,16 @@ int main (int argc, char **files){
     }
 
     free(templine);
-    free(strct);
+    if(strct != NULL)
+        free(strct);
 
     fixSymLbl(initmap, initlbl, initsym);
+
     //printNodes(initmap, initlbl, initsym);
-    printFinal(initmap);
+    printFinal(initmap, out);
+    freeNodes(initmap, 1);
+    freeNodes(initlbl, 2);
+    freeNodes(initsym, 2);
 
     return 0;
 }

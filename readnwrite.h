@@ -12,7 +12,7 @@
 
 int issym(char *arg, line *strct, int islbl);
 
-line *idArgs(char *arg, int *numlin, int numlinlin);
+line *idArgs(char *arg, int *numlin, int numlinlin, FILE *out);
 
 int getLine(char *templine, FILE *in);
 

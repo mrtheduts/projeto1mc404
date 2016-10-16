@@ -52,12 +52,51 @@ void printNodes(argnode *node1, argnode *node2, argnode *node3){
 
 }
 
-void printFinal(argnode *init){
+void freeNodes(argnode *node, int type){
+
+    if(type == 1){
+
+        if(node == NULL)
+            return
+
+        freeNodes(node->nxt, 1);
+        free(node);
+    }
+
+    else if(type == 2){
+
+        if(node == NULL)
+            return;
+
+        freeNodes(node->next[0], 2);
+        free(node);
+    }
+}
+
+void printFinal(argnode *init, FILE *out){
 
     init = init->nxt;
 
-    while(init != NULL){
 
+    if(out != NULL){
+
+        while(init != NULL){
+
+            if(strcmp(init->arg[0], "00000") || strcmp(init->arg[1], "00000") ||
+               init->wfill)
+                fprintf(out, "%0.3X %c%c %c%c%c %c%c %c%c%c\n", init->numlin,
+                       init->arg[0][0], init->arg[0][1], init->arg[0][2],
+                       init->arg[0][3], init->arg[0][4], init->arg[1][0],
+                       init->arg[1][1], init->arg[1][2], init->arg[1][3],
+                       init->arg[1][4]);
+
+            init = init->nxt;
+        }
+
+        fclose(out);
+    }
+
+    while(init != NULL){
         if(strcmp(init->arg[0], "00000") || strcmp(init->arg[1], "00000") ||
            init->wfill)
             printf("%0.3X %c%c %c%c%c %c%c %c%c%c\n", init->numlin,
@@ -67,7 +106,6 @@ void printFinal(argnode *init){
                    init->arg[1][4]);
 
         init = init->nxt;
-
     }
 
 }

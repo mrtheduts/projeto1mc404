@@ -12,6 +12,7 @@ typedef struct Line{
     int label;
     int symbol;
     int inst;
+    int line;
     unsigned long int num;
     int negative;
     int hex;
@@ -53,6 +54,7 @@ int issym(char *arg, line *strct, int islbl){
         arg++;
     }
 
+
     while(isalnum(arg[cntstr]) || arg[cntstr] == '_') {
         cntstr++;
     }
@@ -62,6 +64,7 @@ int issym(char *arg, line *strct, int islbl){
         tmp = arg[cntstr];
         arg[cntstr] = 0;
         memcpy(strct->sym, arg, cntstr);
+        //printf("%s\n", arg);
         strct->symbol = 1;
         return 1;
 
@@ -144,8 +147,18 @@ int isDeciNum(char *arg, line *strct, int quomarks){
         arg++;
     }
 
+
+
     while(isdigit(arg[cntdeci]))
         cntdeci++;
+
+    if(cntdeci == 0)
+        return 0;
+
+    if(quomarks)
+        arg[cntdeci] = ' ';
+
+    //printf("%s\n",arg);
 
     if(cntdeci && (isspace(arg[cntdeci]) || !arg[cntdeci])){
 
@@ -299,10 +312,10 @@ int idDir(char *arg, int cntdb, line *strct){
     }
 }
 
-line *idArgs(char *arg, int *numlin, int numlinin) {
+line *idArgs(char *arg, int *numlin, int numlinin, FILE *out) {
 
     char ddb[][8] = {"blank", ".set ", ".org ", ".align ", ".wfill ", ".word "};
-    char idb[][8] = {"blank", "LD ", "LD- ", "LD| ", "LDmq ", "LDmq_mx ", "ST ", "JMP ", "JUMP+ ",
+    char idb[][9] = {"blank", "LD ", "LD- ", "LD| ", "LDmq ", "LDmq_mx ", "ST ", "JMP ", "JUMP+ ",
     "ADD ", "ADD| ", "SUB ", "SUB| ", "MUL ", "DIV ", "LSH ", "RSH ", "STaddr "};
     int cntdb = 0;
     line *strct;
@@ -312,7 +325,7 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
 
     while(arg[0]){
 
-        printf("|%s|\n",arg);
+        //printf("|%s|\n",arg);
 
         controle++;
 
@@ -323,7 +336,11 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
 
             if(strct->dir){
 
-                printf("Error on line %d\nDuas diretivas em uma unica linha.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nDuas diretivas em uma unica linha.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nDuas diretivas em uma unica linha.\n", numlinin);
+
                 free(strct);
                 return NULL;
             }
@@ -335,14 +352,22 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
 
             if (cntdb == 6) {
 
-                printf("Error on line %d\nDiretiva inexistente.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nDiretiva inexistente.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nDiretiva inexistente.\n", numlinin);
+
                 free(strct);
                 return NULL;
             }
 
             else if(strct->inst){
 
-                printf("Error on line %d\nDiretiva com instrucao.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nDiretiva com instrucao.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nDiretiva com instrucao.\n", numlinin);
+
                 free(strct);
                 return NULL;
             }
@@ -353,49 +378,77 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
             if((strct->dir == 1 || strct->dir == 2 || strct->dir == 3 || strct->dir == 4) &&
                     (strct->num > 1023 || strct->negative)){
 
-                printf("Error on line %d\nNumero não compativel.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nNumero não compativel.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nNumero não compativel.\n", numlinin);
+
                 free(strct);
                 return NULL;
             }
 
             else if((strct->dir == 3 || strct->dir == 4) && !strct->num){
 
-                printf("Error on line %d\nZero não é valido.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nZero não é valido.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nZero não é valido.\n", numlinin);
+
                 free(strct);
                 return NULL;
             }
 
             else if(strct->dir == -1){
 
-                printf("Error on line %d\nSYM não compativel com diretiva .set.\n",numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nSYM não compativel com diretiva .set.\n",numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nSYM não compativel com diretiva .set.\n",numlinin);
+
                 free(strct);
                 return NULL;
             }
 
             else if(strct->dir == -3){
 
-                printf("Error on line %d\nArgumento não compativel com diretiva .align.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nArgumento não compativel com diretiva .align.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nArgumento não compativel com diretiva .align.\n", numlinin);
+
                 free(strct);
                 return NULL;
             }
 
             else if(strct->dir == -4){
 
-                printf("Error on line %d\nArgumento não compativel com diretiva .wfill.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nArgumento não compativel com diretiva .wfill.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nArgumento não compativel com diretiva .wfill.\n", numlinin);
+
                 free(strct);
                 return NULL;
             }
 
             else if((strct->num + *numlin > 1023) && strct->dir == 4){
 
-                printf("Error on line %d\nNumero de linhas para preencher ultrapassa o limite da memoria.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nNumero de linhas para preencher ultrapassa o limite da memoria.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nNumero de linhas para preencher ultrapassa o limite da memoria.\n", numlinin);
+
                 free(strct);
                 return NULL;
             }
 
             else if(strct->dir == 5 && strct->negative){
 
-                printf("Error on line %d\nNumero não compativel com diretiva.\n", numlinin);
+                if(out == NULL)
+                    printf("ERROR on line %d\nNumero não compativel com diretiva.\n", numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nNumero não compativel com diretiva.\n", numlinin);
+
                 free(strct);
                 return NULL;
             }
@@ -411,7 +464,11 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
 
                         if (strct->dir || strct->inst){
 
-                            printf("Error on line %d\nDefinicao de rotulo depois de diretiva/instrucao\n", numlinin);
+                            if(out == NULL)
+                                printf("ERROR on line %d\nDefinicao de rotulo depois de diretiva/instrucao\n", numlinin);
+                            else
+                                fprintf(out, "ERROR on line %d\nDefinicao de rotulo depois de diretiva/instrucao\n", numlinin);
+
                             free(strct);
                             return NULL;
                         }
@@ -424,22 +481,38 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
                 if(!strct->inst){
 
                     for (cntdb = 1; cntdb <= 17; cntdb++) {
-                        printf("|%d|\n",strncmp(arg, idb[cntdb], strlen(idb[cntdb] + 2)));
 
+                        //printf("|%s||%s|\n", arg, idb[cntdb]);
+                        //printf("|%d|\n",strncmp(arg, idb[cntdb], strlen(idb[cntdb])));
+
+                        if((cntdb == 15 || cntdb == 16) && (arg[strlen(idb[cntdb]) - 1] == 0 ||
+                                arg[strlen(idb[cntdb]) - 1] == '\n') && !strncmp(arg, idb[cntdb], strlen(idb[cntdb]) - 2)) {
+                            break;
+                        }
 
                         if (!strncmp(arg, idb[cntdb], strlen(idb[cntdb])))
                             break;
                     }
 
+
                     if(cntdb == 18){
-                        printf("Error on line %d\nInstrucao invalida\n", numlinin);
+
+                        if(out == NULL)
+                            printf("ERROR on line %d\nInstrucao invalida\n", numlinin);
+                        else
+                            fprintf(out, "ERROR on line %d\nInstrucao invalida\n", numlinin);
+
                         free(strct);
                         return NULL;
                     }
 
                     else if(strct->dir){
 
-                        printf("Error on line %d\nDiretiva com instrucao.\n", numlinin);
+                        if(out == NULL)
+                            printf("ERROR on line %d\nDiretiva com instrucao.\n", numlinin);
+                        else
+                            fprintf(out, "ERROR on line %d\nDiretiva com instrucao.\n", numlinin);
+
                         free(strct);
                         return NULL;
                     }
@@ -499,17 +572,22 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
 
                         arg += strlen(idb[cntdb]);
 
-                        if(isHexNum(arg, strct, 1) || issym(arg, strct, 2) ||isDeciNum(arg, strct, 1)) {
+                        if(cntdb == 15 || cntdb == 16)
+                            continue;
+
+                        if(isHexNum(arg, strct, 1) ||isDeciNum(arg, strct, 1)) {
 
                             if(strct->negative) {
 
-                                printf("Error on line %d\nNumero negativo na instrucao.\n", numlinin);
+                                if(out == NULL)
+                                    printf("ERROR on line %d\nNumero negativo na instrucao.\n", numlinin);
+                                else
+                                    fprintf(out, "ERROR on line %d\nNumero negativo na instrucao.\n", numlinin);
+
                                 free(strct);
                                 return NULL;
                             }
 
-                            if(strct->symbol)
-                                arg += strlen(strct->sym) + 2;
                             else if(strct->hex)
                                 arg += SIZEHEXA + 2;
                             else
@@ -517,20 +595,37 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
 
                             continue;
                         }
+
+                        else if(issym(arg, strct, 2)){
+
+                            if(strct->symbol)
+                                arg += strlen(strct->sym) + 2;
+
+                            continue;
+
+                        }
                     }
 
                 }
 
                 else{
 
-                    printf("Error on line %d\nNumero maximo de palavras excedido.\n", numlinin);
+                    if(out == NULL)
+                        printf("ERROR on line %d\nNumero maximo de palavras excedido.\n", numlinin);
+                    else
+                        fprintf(out, "ERROR on line %d\nNumero maximo de palavras excedido.\n", numlinin);
+
                     free(strct);
                     return NULL;
 
                 }
             }
 
-            printf("Error on line %d\nInstrucao/rotulo invalido", numlinin);
+            if(out == NULL)
+                printf("ERROR on line %d\nInstrucao/rotulo invalido", numlinin);
+            else
+                fprintf(out, "ERROR on line %d\nInstrucao/rotulo invalido", numlinin);
+
             free(strct);
             return NULL;
         }
