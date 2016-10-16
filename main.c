@@ -38,10 +38,9 @@ int main (int argc, char **files){
 
     templine = calloc(200, sizeof(char));
 
-    while(1){
+    while(!error){
 
         type = getLine(templine, in);
-        //printf("%d\n", type);
         numlinin++;
 
         if(type == -1)
@@ -53,9 +52,10 @@ int main (int argc, char **files){
 
         if(strct = idArgs(templine, &numlin, numlinin)){
 
-            printLine(strct);
+            //printLine(strct);
             execLine(strct, &numlin, &right, initmap, initsym, initlbl, numlinin, &error);
-            system("sleep 1s");
+            //printNodes(initmap, initlbl, initsym);
+            //system("sleep 0.5s");
         }
 
         else{
@@ -69,6 +69,13 @@ int main (int argc, char **files){
             templine[cnt] = 0;
 
     }
+
+    free(templine);
+    free(strct);
+
+    fixSymLbl(initmap, initlbl, initsym);
+    //printNodes(initmap, initlbl, initsym);
+    printFinal(initmap);
 
     return 0;
 }

@@ -9,6 +9,7 @@
 
 #include "readnwrite.c"
 
+
 int issym(char *arg, line *strct, int islbl);
 
 line *idArgs(char *arg, int *numlin, int numlinlin);
@@ -17,7 +18,7 @@ int getLine(char *templine, FILE *in);
 
 int numPlaces (int n);
 
-int isHexNum(char *arg, line *strct);
+int isHexNum(char *arg, line *strct, int quomarks);
 
 int isDeciNum(char *arg, line *strct, int quomarks);
 

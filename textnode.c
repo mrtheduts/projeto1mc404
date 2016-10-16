@@ -8,9 +8,11 @@ typedef struct ArgNode{
 
     int type;
     int right;
+    int wfill;
+    int sym;
 
     int numlin;
-    char label[65];
+    char label[2][65];
 
 
     union{
@@ -27,6 +29,49 @@ typedef struct ArgNode{
 
 }argnode;
 
+void printNodes(argnode *node1, argnode *node2, argnode *node3){
+
+    while(node1->nxt != NULL){
+        printf("NumLin %d | %s %s | %s %s | %d\n", node1->nxt->numlin,
+        node1->nxt->label[0], node1->nxt->label[1],  node1->nxt->arg[0], node1->nxt->arg[1],
+        node1->nxt->num);
+
+        node1 = node1->nxt;
+    }
+    printf("//\n");
+    while(node2->next[0] != NULL){
+        printf("%s | %d\n", node2->next[0]->label[0], node2->next[0]->next[1]->numlin);
+        node2 = node2->next[0];
+    }
+    printf("//\n");
+    while(node3->next[0] != NULL){
+        printf("%s | %d\n", node3->next[0]->label[0], node3->next[0]->num);
+        node3 = node3->next[0];
+    }
+
+
+}
+
+void printFinal(argnode *init){
+
+    init = init->nxt;
+
+    while(init != NULL){
+
+        if(strcmp(init->arg[0], "00000") || strcmp(init->arg[1], "00000") ||
+           init->wfill)
+            printf("%0.3X %c%c %c%c%c %c%c %c%c%c\n", init->numlin,
+                   init->arg[0][0], init->arg[0][1], init->arg[0][2],
+                   init->arg[0][3], init->arg[0][4], init->arg[1][0],
+                   init->arg[1][1], init->arg[1][2], init->arg[1][3],
+                   init->arg[1][4]);
+
+        init = init->nxt;
+
+    }
+
+}
+
 argnode *searchElem(argnode *node, int numlin, char *arg, int type){
 
     if(type == 1){
@@ -41,7 +86,7 @@ argnode *searchElem(argnode *node, int numlin, char *arg, int type){
     else if(type == 2){
 
 
-        while(node->next[0] != NULL && strcmp(node->next[0]->label, arg))
+        while(node->next[0] != NULL && strcmp(node->next[0]->label[0], arg))
             node = node->next[0];
 
         return node->next[0];
@@ -93,14 +138,40 @@ void insertElem(argnode *node, line *lin, int numlin, int type, argnode *dest){
 
             node->next[0] = calloc(1, sizeof(argnode));
             node = node->next[0];
-            node->type = 3;
-            strcpy(node->label, lin->lbl);
+            node->type = 2;
+            strcpy(node->label[0], lin->lbl);
             node->next[1] = dest;
         }
 
         else{
 
-            while(node->next[0] != NULL && !strcmp(node->next[0]->label, lin->lbl))
+            while(node->next[0] != NULL && !strcmp(node->next[0]->label[0], lin->lbl))
+                node = node->nxt;
+
+            tmp = node->next[0];
+            node->next[0] = calloc(1, sizeof(argnode));
+            node = node->next[0];
+            node->next[0] = tmp;
+            node->type = 2;
+            strcpy(node->label[0], lin->lbl);
+            node->next[1] = dest;
+        }
+    }
+
+    else if(type == 3){
+
+        if(node->next == NULL){
+
+            node->next[0] = calloc(1, sizeof(argnode));
+            node = node->next[0];
+            node->type = 3;
+            strcpy(node->label[0], lin->sym);
+            node->num = lin->num;
+        }
+
+        else{
+
+            while(node->next[0] != NULL && !strcmp(node->next[0]->label[0], lin->sym))
                 node = node->nxt;
 
             tmp = node->next[0];
@@ -108,8 +179,8 @@ void insertElem(argnode *node, line *lin, int numlin, int type, argnode *dest){
             node = node->next[0];
             node->next[0] = tmp;
             node->type = 3;
-            strcpy(node->label, lin->lbl);
-            node->next[1] = dest;
+            strcpy(node->label[0], lin->sym);
+            node->num = lin->num;
         }
     }
 

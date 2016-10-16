@@ -4,7 +4,7 @@
  *   RA: 166779
  */
 
-#define SIZEHEXA 15
+#define SIZEHEXA 13
 
 typedef struct Line{
 
@@ -94,27 +94,36 @@ int numPlaces (int n){
     return 1 + numPlaces (n / 10);
 }
 
-int isHexNum(char *arg, line *strct){
+int isHexNum(char *arg, line *strct, int quomarks){
 
     char *temp, c;
 
+    if(quomarks)
+        arg++;
 
-    if(!strncmp(arg, "\"0x", 3)) {
 
-        c = arg[13];
-        arg[13] = 0;
-        arg ++;
+    if(!strncmp(arg, "0x", 2)) {
+
+
+        if(quomarks) {
+
+            c = arg[12];
+            arg[12] = 0;
+        }
 
         if (isxdigit(arg[0])) {
 
             strct->num = strtol(arg, &temp, 16);
             strct->hex = 1;
-            //printf("Strct num %ld/%.10lX\n", strct->num, strct->num);
-            arg[13] = c;
+
+            if(quomarks)
+                arg[12] = c;
+
             return 1;
         }
 
-        arg[13] = c;
+        if(quomarks)
+            arg[12] = c;
     }
 
     else
@@ -159,7 +168,8 @@ int idDir(char *arg, int cntdb, line *strct){
 
         if(issym(arg + 5, strct, 0)){
 
-            if(isHexNum(arg + strlen(strct->sym) + 6, strct) || isDeciNum(arg + strlen(strct->sym) + 6, strct, 0)){
+
+            if(isHexNum(arg + strlen(strct->sym) + 6, strct, 0) || isDeciNum(arg + strlen(strct->sym) + 6, strct, 0)){
 
                 strct->dir = 1;
 
@@ -181,7 +191,7 @@ int idDir(char *arg, int cntdb, line *strct){
 
     else if(cntdb == 2){
 
-        if(isHexNum(arg + 5, strct) || isDeciNum(arg + 5, strct, 0)){
+        if(isHexNum(arg + 5, strct, 0) || isDeciNum(arg + 5, strct, 0)){
 
             strct->dir = 2;
 
@@ -230,7 +240,7 @@ int idDir(char *arg, int cntdb, line *strct){
                 tmpnegative = strct->negative;
 
                 if(isDeciNum(arg + 8 +numPlaces(strct->num), strct, 0) ||
-                        isHexNum(arg + 8 + numPlaces(strct->num), strct) ||
+                        isHexNum(arg + 8 + numPlaces(strct->num), strct, 0) ||
                         issym(arg + 8 + numPlaces(strct->num), strct, 0)){
 
 
@@ -268,7 +278,7 @@ int idDir(char *arg, int cntdb, line *strct){
 
     else if(cntdb == 5){
 
-        if(isHexNum(arg + 6, strct) || isDeciNum(arg + 6, strct, 0) || issym(arg + 6, strct, 0)){
+        if(isHexNum(arg + 6, strct, 0) || isDeciNum(arg + 6, strct, 0) || issym(arg + 6, strct, 0)){
 
             strct->dir = 5;
 
@@ -292,7 +302,7 @@ int idDir(char *arg, int cntdb, line *strct){
 line *idArgs(char *arg, int *numlin, int numlinin) {
 
     char ddb[][8] = {"blank", ".set ", ".org ", ".align ", ".wfill ", ".word "};
-    char idb[][8] = {"blank", "LD ", "LD- ", "LD|", "LDmq ", "LDmq_mx ", "ST ", "JMP ", "JUMP+ ",
+    char idb[][8] = {"blank", "LD ", "LD- ", "LD| ", "LDmq ", "LDmq_mx ", "ST ", "JMP ", "JUMP+ ",
     "ADD ", "ADD| ", "SUB ", "SUB| ", "MUL ", "DIV ", "LSH ", "RSH ", "STaddr "};
     int cntdb = 0;
     line *strct;
@@ -302,7 +312,7 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
 
     while(arg[0]){
 
-        //printf("|%s|\n",arg);
+        printf("|%s|\n",arg);
 
         controle++;
 
@@ -413,12 +423,15 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
 
                 if(!strct->inst){
 
-                    for (cntdb = 1; cntdb <= 17; cntdb++)
+                    for (cntdb = 1; cntdb <= 17; cntdb++) {
+                        printf("|%d|\n",strncmp(arg, idb[cntdb], strlen(idb[cntdb] + 2)));
+
+
                         if (!strncmp(arg, idb[cntdb], strlen(idb[cntdb])))
                             break;
+                    }
 
                     if(cntdb == 18){
-
                         printf("Error on line %d\nInstrucao invalida\n", numlinin);
                         free(strct);
                         return NULL;
@@ -486,7 +499,7 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
 
                         arg += strlen(idb[cntdb]);
 
-                        if(isHexNum(arg, strct) || issym(arg, strct, 2) ||isDeciNum(arg, strct, 1)) {
+                        if(isHexNum(arg, strct, 1) || issym(arg, strct, 2) ||isDeciNum(arg, strct, 1)) {
 
                             if(strct->negative) {
 
@@ -498,7 +511,7 @@ line *idArgs(char *arg, int *numlin, int numlinin) {
                             if(strct->symbol)
                                 arg += strlen(strct->sym) + 2;
                             else if(strct->hex)
-                                arg += SIZEHEXA;
+                                arg += SIZEHEXA + 2;
                             else
                                 arg += numPlaces(strct->num) + 2;
 
@@ -565,7 +578,7 @@ int getLine(char *templine, FILE *in){
     else
         templine[cntChar] = 0;
 
-    printf("%s\n", templine);
+    //printf("%s\n", templine);
 
     if(tmp == EOF && !line)
         return 0;

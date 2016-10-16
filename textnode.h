@@ -9,6 +9,8 @@
 
 #include "textnode.c"
 
+void printNodes(argnode *node1, argnode *node2, argnode *node3);
+
 /*Cria um novo no ja identificado pelo numero da linha*/
 argnode* newNode (int nl);
 
