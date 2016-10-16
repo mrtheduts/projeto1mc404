@@ -11,7 +11,7 @@
 
 int issym(char *arg, line *strct, int islbl);
 
-line *idArgs(char *arg, int numlinlin);
+line *idArgs(char *arg, int *numlin, int numlinlin);
 
 int getLine(char *templine, FILE *in);
 
@@ -19,9 +19,9 @@ int numPlaces (int n);
 
 int isHexNum(char *arg, line *strct);
 
-int isDeciNum(char *arg, line *strct);
+int isDeciNum(char *arg, line *strct, int quomarks);
 
-int idDir(char *arg, int cntdb, int *numlin, char *right, line *strct);
+int idDir(char *arg, int cntdb, line *strct);
 
 #endif /*READNWRITE_H_INCLUDED*/
 

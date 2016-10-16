@@ -21,7 +21,9 @@ int main (int argc, char **files){
     char *templine;
     line *strct;
 
-    argnode *init = NULL, *tmp = NULL;
+    argnode *initmap = calloc(1, sizeof(argnode));
+    argnode *initsym = calloc(1, sizeof(argnode));
+    argnode *initlbl = calloc(1, sizeof(argnode));
 
     in = fopen(files[1], "r");
 
@@ -49,9 +51,10 @@ int main (int argc, char **files){
             break;
 
 
-        if(strct = idArgs(templine, numlinin)){
+        if(strct = idArgs(templine, &numlin, numlinin)){
 
             printLine(strct);
+            execLine(strct, &numlin, &right, initmap, initsym, initlbl, numlinin, &error);
             system("sleep 1s");
         }
 
