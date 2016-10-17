@@ -4,31 +4,32 @@
  *   RA: 166779
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "readnwrite.h"
+
 typedef struct ArgNode{
 
     int type;
     int right;
     int wfill;
     int sym;
-
+    int numlinin[2];
     int numlin;
     char label[2][65];
 
 
-    union{
+    char arg[2][6];
+    unsigned long int num;
 
-        char arg[2][6];
-        unsigned long int num;
-    };
+    struct ArgNode *nxt;
+    struct ArgNode *next[2];
 
-    union{
-
-        struct ArgNode *nxt;
-        struct ArgNode *next[2];
-    };
 
 }argnode;
-
+/*
 void printNodes(argnode *node1, argnode *node2, argnode *node3){
 
     while(node1->nxt != NULL){
@@ -51,16 +52,19 @@ void printNodes(argnode *node1, argnode *node2, argnode *node3){
 
 
 }
-
+*/
 void freeNodes(argnode *node, int type){
 
     if(type == 1){
 
         if(node == NULL)
-            return
+            return;
 
-        freeNodes(node->nxt, 1);
-        free(node);
+        else {
+
+            freeNodes(node->nxt, 1);
+            free(node);
+        }
     }
 
     else if(type == 2){
@@ -84,7 +88,7 @@ void printFinal(argnode *init, FILE *out){
 
             if(strcmp(init->arg[0], "00000") || strcmp(init->arg[1], "00000") ||
                init->wfill)
-                fprintf(out, "%0.3X %c%c %c%c%c %c%c %c%c%c\n", init->numlin,
+                fprintf(out, "%.3X %c%c %c%c%c %c%c %c%c%c\n", init->numlin,
                        init->arg[0][0], init->arg[0][1], init->arg[0][2],
                        init->arg[0][3], init->arg[0][4], init->arg[1][0],
                        init->arg[1][1], init->arg[1][2], init->arg[1][3],
@@ -99,7 +103,7 @@ void printFinal(argnode *init, FILE *out){
     while(init != NULL){
         if(strcmp(init->arg[0], "00000") || strcmp(init->arg[1], "00000") ||
            init->wfill)
-            printf("%0.3X %c%c %c%c%c %c%c %c%c%c\n", init->numlin,
+            printf("%.3X %c%c %c%c%c %c%c %c%c%c\n", init->numlin,
                    init->arg[0][0], init->arg[0][1], init->arg[0][2],
                    init->arg[0][3], init->arg[0][4], init->arg[1][0],
                    init->arg[1][1], init->arg[1][2], init->arg[1][3],
@@ -225,16 +229,4 @@ void insertElem(argnode *node, line *lin, int numlin, int type, argnode *dest){
     return ;
 
 }
-/*
-void destroyLine(argnode *node, int type){
 
-    if(node == NULL)
-        return;
-
-    else{
-        destroyLine(node->next);
-        free(node);
-    }
-}*/
- 
-    

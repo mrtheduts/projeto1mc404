@@ -4,7 +4,15 @@
  *   RA: 166779
  */
 
-void fixSymLbl(argnode *map, argnode *lbl, argnode *sym){
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+
+#include "textnode.h"
+
+void fixSymLbl(argnode *map, argnode *lbl, argnode *sym, FILE *out, int *error){
 
     argnode *nmap, *nlbl, *nsym;
     char arg[65], *tmp;
@@ -19,12 +27,10 @@ void fixSymLbl(argnode *map, argnode *lbl, argnode *sym){
         if(nmap->label[0][0]){
 
             strcpy(arg, nmap->label[0]);
-
             nlbl = lbl->next[0];
 
             while (nlbl != NULL && strcmp(arg, nlbl->label[0]))
                 nlbl = nlbl->next[0];
-
 
             if(nlbl == NULL) {
 
@@ -36,12 +42,29 @@ void fixSymLbl(argnode *map, argnode *lbl, argnode *sym){
                 flagsym = 1;
             }
 
+            if(nlbl == NULL){
+
+                if(out == NULL){
+
+                    printf("ERROR on line %d\nSYM/LABEL não declarado.\n", nmap->numlinin[0]);
+                    *error = 1;
+                    return;
+                }
+
+                else{
+
+                    fprintf(out, "ERROR on line %d\nSYM/LABEL não declarado.\n", nmap->numlinin[0]);
+                    *error = 1;
+                    return;
+                }
+            }
+
             if(nmap->wfill){
 
                 if(!strcmp(nmap->label[0], nlbl->label[0]) && flagsym){
 
                     tmp = calloc(10, sizeof(char));
-                    sprintf(tmp, "%0.10X", nlbl->num);
+                    sprintf(tmp, "%.10X", (unsigned int) nlbl->num);
                     memcpy(nmap->arg[0], tmp, 5);
                     tmp += 5;
                     memcpy(nmap->arg[1], tmp, 5);
@@ -51,7 +74,7 @@ void fixSymLbl(argnode *map, argnode *lbl, argnode *sym){
                 else{
 
                     tmp = calloc(10, sizeof(char));
-                    sprintf(tmp, "%0.10X", nlbl->next[1]->numlin);
+                    sprintf(tmp, "%.10X", nlbl->next[1]->numlin);
                     memcpy(nmap->arg[0], tmp, 5);
                     tmp += 5;
                     memcpy(nmap->arg[1], tmp, 5);
@@ -68,14 +91,14 @@ void fixSymLbl(argnode *map, argnode *lbl, argnode *sym){
                     if(nmap->arg[0][1] != 'F')
                         nmap->arg[0][1] += nlbl->right;
 
-                    else{
-                        nmap->arg[0][0] += '1';
-                        nmap->arg[0][1] += '0';
+                    else if(nlbl->right){
+                        nmap->arg[0][0] = '1';
+                        nmap->arg[0][1] = '0';
                     }
                 }
 
                 tmp = calloc(5, sizeof(char));
-                sprintf(tmp, "%0.5X", nlbl->next[1]->numlin);
+                sprintf(tmp, "%.5X", nlbl->next[1]->numlin);
                 memcpy(tmp, nmap->arg[0], 2);
                 memcpy(nmap->arg[0], tmp, 5);
             }
@@ -93,6 +116,23 @@ void fixSymLbl(argnode *map, argnode *lbl, argnode *sym){
             while (nlbl != NULL && strcmp(arg, nlbl->label[0]))
                 nlbl = nlbl->next[0];
 
+            if(nlbl == NULL){
+
+                if(out == NULL){
+
+                    printf("ERROR on line %d\nSYM/LABEL não declarado.\n", nmap->numlinin[0]);
+                    *error = 1;
+                    return;
+                }
+
+                else{
+
+                    fprintf(out, "ERROR on line %d\nSYM/LABEL não declarado.\n", nmap->numlinin[0]);
+                    *error = 1;
+                    return;
+                }
+            }
+
             if((nmap->arg[1][0] == '0' && nmap->arg[1][1] == 'D') ||
                (nmap->arg[1][0] == '0' && nmap->arg[1][1] == 'F') ||
                (nmap->arg[1][0] == '1' && nmap->arg[1][1] == '2')){
@@ -100,14 +140,14 @@ void fixSymLbl(argnode *map, argnode *lbl, argnode *sym){
                 if(nmap->arg[1][1] != 'F')
                     nmap->arg[1][1] += nlbl->right;
 
-                else{
-                    nmap->arg[1][0] += '1';
-                    nmap->arg[1][1] += '0';
+                else if(nlbl->right){
+                    nmap->arg[1][0] = '1';
+                    nmap->arg[1][1] = '0';
                 }
             }
 
             tmp = calloc(5, sizeof(char));
-            sprintf(tmp, "%0.5X", nlbl->next[1]->numlin);
+            sprintf(tmp, "%.5X", nlbl->next[1]->numlin);
             memcpy(tmp, nmap->arg[1], 2);
             memcpy(nmap->arg[1], tmp, 5);
             free(tmp);
@@ -123,7 +163,7 @@ char *readyWordNum(line *lin){
 
     char *arg = calloc(10, sizeof(char));
 
-    sprintf(arg, "%0.10X", lin->num);
+    sprintf(arg, "%.10X", (unsigned int) lin->num);
 
     return arg;
 }
@@ -132,7 +172,7 @@ char *readyWordWfill(line *lin){
 
     char *arg = calloc(10, sizeof(char));
 
-    sprintf(arg, "%0.10X", lin->numwfill);
+    sprintf(arg, "%.10X", (unsigned int) lin->numwfill);
 
     return arg;
 }
@@ -141,10 +181,10 @@ char *readyHalfWord(line *lin){
 
     char *arg = calloc(5, sizeof(char));
 
-    sprintf(arg, "%0.2X", lin->inst);
+    sprintf(arg, "%.2X", lin->inst);
     arg += 2;
 
-    sprintf(arg, "%0.3X", lin->num);
+    sprintf(arg, "%.3X", (unsigned int) lin->num);
     arg -= 2;
 
     //printf("RHW %s\n", arg);
@@ -162,6 +202,25 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
 
     //printNodes(initmap, initlbl, initsym);
 
+    if(*numlin > 1023){
+
+        if(out == NULL){
+
+            printf("ERROR on line %d\nLimite do mapa de memoria ultrapassado.\n", *numlin);
+            free(lin);
+            *error = 1;
+            return;
+        }
+
+        else{
+
+            fprintf(out, "ERROR on line %d\nLimite do mapa de memoria ultrapassado.\n", *numlin);
+            free(lin);
+            *error = 1;
+            return;
+        }
+    }
+
     if(lin->inst){
 
         if(!*right)
@@ -169,7 +228,6 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
 
         node = searchElem(initmap, *numlin, NULL, 1);
 
-        //printf("NODE %d", node->numlin);
 
         if(!lin->symbol)
             strcpy(node->arg[*right], readyHalfWord(lin));
@@ -177,10 +235,11 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
 
         else{
 
-            sprintf(node->arg[*right], "%0.2X", lin->inst);
+            sprintf(node->arg[*right], "%.2X", lin->inst);
             strcpy(node->label[*right], lin->sym);
         }
 
+        node->numlinin[*right] = lin->line;
         //printf("%s %s\n", node->arg[0], node->arg[1]);
 
     }
@@ -212,6 +271,7 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
             node = searchElem(initlbl, *numlin, lin->lbl, 2);
             node->next[1] = searchElem(initmap, *numlin, NULL, 1);
             node->right = *right;
+            node->numlinin[*right] = lin->line;
         }
 
     }
@@ -235,6 +295,8 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
             else{
 
                 insertElem(initsym, lin, *numlin, 3, NULL);
+                node = searchElem(initsym, *numlin, lin->sym, 2);
+                node->numlinin[*right] = lin->line;
             }
 
             return;
@@ -243,13 +305,18 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
         else if(lin->dir == 2){
 
             *numlin = lin->num;
+            *right = 0;
             return;
         }
 
         else if(lin->dir == 3){
 
+            if(*right)
+                (*numlin)++;
+
             while((*numlin)%lin->num && (*numlin) < 1024)
                 (*numlin)++;
+
 
             if(*numlin == 1024){
 
@@ -289,7 +356,7 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
                 endwfill = lin->num;
 
 
-                if(node = searchElem(initmap, *numlin, NULL, 1)){
+                if((node = searchElem(initmap, *numlin, NULL, 1))){
 
                     (*numlin)++;
                     endwfill--;
@@ -303,6 +370,7 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
                 }
 
                 node = searchElem(initmap, initwfill, NULL, 1);
+                node->numlinin[*right] = lin->line;
 
                 if(!lin->symbol){
                     for(endwfill = 0; endwfill < lin->num; endwfill++){
@@ -311,6 +379,7 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
                         memcpy(node->arg[0], tmp, 5);
                         tmp += 5;
                         memcpy(node->arg[1], tmp, 5);
+                        node->numlinin[*right] = lin->line;
                         node = node->nxt;
                         free(tmp - 5);
                     }
@@ -321,6 +390,7 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
 
                         strcpy(node->label[0], lin->sym);
                         node->wfill = 1;
+                        node->numlinin[*right] = lin->line;
                         node = node->nxt;
                     }
 
@@ -346,7 +416,7 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
                 return;
             }
 
-            if(node = searchElem(initmap, *numlin, NULL, 1));
+            if((node = searchElem(initmap, *numlin, NULL, 1)));
 
             else{
 
@@ -355,6 +425,7 @@ void execLine(line *lin, int *numlin, int *right, argnode *initmap,
             }
 
             node->wfill = 1;
+            node->numlinin[*right] = lin->line;
 
             if(!lin->symbol){
 

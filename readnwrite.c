@@ -4,6 +4,11 @@
  *   RA: 166779
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
 #define SIZEHEXA 13
 
 typedef struct Line{
@@ -35,7 +40,7 @@ void printLine(line *strct){
     printf("IS HEX %d\n", strct->hex);
     printf("LABEL %s\n", strct->lbl);
     printf("SYMBOL %s\n", strct->sym);
-    printf("NUM WFILL %d\n", strct->numwfill);
+    printf("NUM WFILL %lu\n", strct->numwfill);
     printf("NEGATIVE WFILL %d\n", strct->negativewfill);
     printf("====================\n");
 }
@@ -64,6 +69,7 @@ int issym(char *arg, line *strct, int islbl){
         tmp = arg[cntstr];
         arg[cntstr] = 0;
         memcpy(strct->sym, arg, cntstr);
+        arg[cntstr] = tmp;
         //printf("%s\n", arg);
         strct->symbol = 1;
         return 1;
@@ -129,8 +135,7 @@ int isHexNum(char *arg, line *strct, int quomarks){
             arg[12] = c;
     }
 
-    else
-        return 0;
+    return 0;
 }
 
 int isDeciNum(char *arg, line *strct, int quomarks){
@@ -171,16 +176,15 @@ int isDeciNum(char *arg, line *strct, int quomarks){
         return 0;
 }
 
-int idDir(char *arg, int cntdb, line *strct){
+int idDir(char *arg, int cntdb, line *strct) {
 
     unsigned long int tmp;
-    int cntstr, cnthex = 0, cntdeci = 0, tmpnegative;
-    char *temp;
+    int tmpnegative;
 
     if(cntdb == 1){
 
-        if(issym(arg + 5, strct, 0)){
 
+        if(issym(arg + 5, strct, 0)){
 
             if(isHexNum(arg + strlen(strct->sym) + 6, strct, 0) || isDeciNum(arg + strlen(strct->sym) + 6, strct, 0)){
 
@@ -192,6 +196,9 @@ int idDir(char *arg, int cntdb, line *strct){
                 else
                     return 6 + strlen(strct->sym) + numPlaces(strct->num);
             }
+
+            strct->dir = -1;
+            return 0;
         }
 
         else {
@@ -309,7 +316,15 @@ int idDir(char *arg, int cntdb, line *strct){
 
 
         }
+
+        else{
+
+            strct->dir = -5;
+            return 0;
+        }
     }
+
+    return 0;
 }
 
 line *idArgs(char *arg, int *numlin, int numlinin, FILE *out) {
@@ -322,11 +337,12 @@ line *idArgs(char *arg, int *numlin, int numlinin, FILE *out) {
     int controle = 0;
 
     strct = calloc(1, sizeof(line));
+    strct->line = numlinin;
 
     while(arg[0]){
 
         //printf("|%s|\n",arg);
-
+        //printLine(strct);
         controle++;
 
         if(controle > 10)
@@ -401,9 +417,20 @@ line *idArgs(char *arg, int *numlin, int numlinin, FILE *out) {
             else if(strct->dir == -1){
 
                 if(out == NULL)
-                    printf("ERROR on line %d\nSYM não compativel com diretiva .set.\n",numlinin);
+                    printf("ERROR on line %d\nSYM/NUM não compativel com diretiva .set.\n",numlinin);
                 else
-                    fprintf(out, "ERROR on line %d\nSYM não compativel com diretiva .set.\n",numlinin);
+                    fprintf(out, "ERROR on line %d\nSYM/NUM não compativel com diretiva .set.\n",numlinin);
+
+                free(strct);
+                return NULL;
+            }
+
+            else if(strct->dir == -2){
+
+                if(out == NULL)
+                    printf("ERROR on line %d\nNUM não compativel com diretiva .set.\n",numlinin);
+                else
+                    fprintf(out, "ERROR on line %d\nNUM não compativel com diretiva .set.\n",numlinin);
 
                 free(strct);
                 return NULL;
@@ -420,7 +447,7 @@ line *idArgs(char *arg, int *numlin, int numlinin, FILE *out) {
                 return NULL;
             }
 
-            else if(strct->dir == -4){
+            else if(strct->dir == -4 || strct->dir == -5){
 
                 if(out == NULL)
                     printf("ERROR on line %d\nArgumento não compativel com diretiva .wfill.\n", numlinin);
@@ -629,6 +656,7 @@ line *idArgs(char *arg, int *numlin, int numlinin, FILE *out) {
             free(strct);
             return NULL;
         }
+
     }
 
     return strct;
@@ -640,7 +668,6 @@ int getLine(char *templine, FILE *in){
     char line = 0;
 
     tmp = fgetc(in);
-
     if(tmp == '\t')
         tmp = ' ';
 
@@ -672,8 +699,6 @@ int getLine(char *templine, FILE *in){
         templine[cntChar - 1] = 0;
     else
         templine[cntChar] = 0;
-
-    //printf("%s\n", templine);
 
     if(tmp == EOF && !line)
         return 0;

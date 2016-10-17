@@ -6,12 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <unistd.h>
 
-#include "readnwrite.h"
-#include "textnode.h"
 #include "action.h"
 
 int main (int argc, char **files){
@@ -71,14 +66,21 @@ int main (int argc, char **files){
 
     }
 
-    free(templine);
-    if(strct != NULL)
+    if(strct != NULL) {
         free(strct);
+    }
 
-    fixSymLbl(initmap, initlbl, initsym);
 
     //printNodes(initmap, initlbl, initsym);
-    printFinal(initmap, out);
+
+
+    fixSymLbl(initmap, initlbl, initsym, out, &error);
+    //printNodes(initmap, initlbl, initsym);
+
+    if(!error)
+        printFinal(initmap, out);
+
+
     freeNodes(initmap, 1);
     freeNodes(initlbl, 2);
     freeNodes(initsym, 2);
